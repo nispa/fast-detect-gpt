@@ -71,7 +71,7 @@ def get_sampling_discrepancy_analytic(logits_ref, logits_score, labels):
 
 def experiment(args):
     # load model
-    scoring_tokenizer = load_tokenizer(args.scoring_model_name, args.dataset, args.cache_dir)
+    scoring_tokenizer = load_tokenizer(args.scoring_model_name, args.cache_dir)
     scoring_model = load_model(args.scoring_model_name, args.device, args.cache_dir)
     scoring_model.eval()
     if args.sampling_model_name != args.scoring_model_name:
@@ -109,14 +109,14 @@ def experiment(args):
                 logits_ref = sampling_model(**tokenized).logits[:, :-1]
             original_crit = criterion_fn(logits_ref, logits_score, labels)
         # sampled text
-        tokenized = scoring_tokenizer(sampled_text, return_tensors="pt", padding=True, return_token_type_ids=False).to(args.device)
+        tokenized = scoring_tokenizer(sampled_text, return_tensors="pt", padding=True, truncation=True, max_length=2048, return_token_type_ids=False).to(args.device)
         labels = tokenized.input_ids[:, 1:]
         with torch.no_grad():
             logits_score = scoring_model(**tokenized).logits[:, :-1]
             if args.sampling_model_name == args.scoring_model_name:
                 logits_ref = logits_score
             else:
-                tokenized = sampling_tokenizer(sampled_text, return_tensors="pt", padding=True, return_token_type_ids=False).to(args.device)
+                tokenized = sampling_tokenizer(sampled_text, return_tensors="pt", padding=True, truncation=True, max_length=2048, return_token_type_ids=False).to(args.device)
                 assert torch.all(tokenized.input_ids[:, 1:] == labels), "Tokenizer is mismatch."
                 logits_ref = sampling_model(**tokenized).logits[:, :-1]
             sampled_crit = criterion_fn(logits_ref, logits_score, labels)
@@ -153,9 +153,9 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_file', type=str, default="./exp_test/data/xsum_falcon-7b")
     parser.add_argument('--sampling_model_name', type=str, default="falcon-7b")
     parser.add_argument('--scoring_model_name', type=str, default="falcon-7b-instruct")
-    parser.add_argument('--discrepancy_analytic', action='store_true')
+    parser.add_argument('--discrepancy_analytic', action='store_true', default=True)
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--device', type=str, default="cuda")
+    parser.add_argument('--device', type=str, default="cpu")
     parser.add_argument('--cache_dir', type=str, default="../cache")
     args = parser.parse_args()
 

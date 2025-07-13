@@ -30,7 +30,7 @@ def save_data(output_file, args, data):
 
 
 def load_data(input_file):
-    data_file = f"{input_file}.raw_data.json"
+    data_file = input_file
     with open(data_file, "r") as fin:
         data = json.load(fin)
         print(f"Raw data loaded from {data_file}")

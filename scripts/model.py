@@ -44,8 +44,8 @@ def load_model(model_name, device, cache_dir):
     model_kwargs = {}
     if model_name in float16_models:
         model_kwargs.update(dict(torch_dtype=torch.float16))
-    if 'gpt-j' in model_name:
-        model_kwargs.update(dict(revision='float16'))
+    if 'falcon' in model_name:
+        model_kwargs.update(dict(trust_remote_code=True))
     model = from_pretrained(AutoModelForCausalLM, model_fullname, model_kwargs, cache_dir)
     print('Moving model to GPU...', end='', flush=True)
     start = time.time()
